@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>STL with color in Forge Viewer</title>
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=no"/>
+    <meta charset="UTF-8">
+
+    <!-- Autodesk Forge Viewer files -->
+    <link rel="stylesheet"
+          href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css"
+          type="text/css">
+
+    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"></script>
+    <script src="./assets/js/three-stl-loader.js"></script>
+    <script src="./assets/js/mesh-utils.js"></script>
+
+</head>
+
+<body>
+    <div id="MyViewerDiv"></div>
+</body>
+<script>
+    let divId = "MyViewerDiv";
+    let viewer;
+
+    async function setupViewer() {
+        await new Promise(function (resolve, reject) {
+            Autodesk.Viewing.Initializer({}, function () {
+                resolve();
+            });
+        });
+
+        viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById(divId), {});
+        viewer.start();
+        await viewer.loadExtension('Autodesk.Viewing.SceneBuilder');
+        ext = viewer.getExtension('Autodesk.Viewing.SceneBuilder');
+        modelBuilder = await ext.addNewModel({});
+
+        const mesh = await createMesh();
+        modelBuilder.addMesh(mesh);
+
+        const camera = viewer.getCameraFromViewArray([
+            0, -50, 50,
+            0, 0, 0,
+            0, 0, 1,
+            1,
+            50 * Math.PI / 180,
+            60,
+            0
+        ]);
+        viewer.impl.setViewFromCamera(camera, true, true);
+    }
+
+
+    setupViewer();
+
+</script>
+
+</html>

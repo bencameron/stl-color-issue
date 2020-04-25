@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>STL with color in basic threejs scene</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+
+        <script src="./assets/js/three.js"></script>
+        <script src="./assets/js/three-stl-loader.js"></script>
+        <script src="./assets/js/OrbitControls.js"></script>
+        <script src="./assets/js/mesh-utils.js"></script>
+    </head>
+	<body>
+        <div id="container"></div>
+	</body>
+    <script>
+
+        var container;
+        var camera, controls, scene, renderer
+
+        setupViewer()
+
+        async function setupViewer() {
+            await init();
+            render();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+        }
+
+        async function init() {
+            camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
+            camera.position.z = 100;
+
+            controls = new THREE.OrbitControls( camera );
+            controls.damping = 0.2;
+            controls.addEventListener( 'change', render );
+
+            scene = new THREE.Scene();
+            var mesh = await createMesh();
+            scene.add(mesh);
+
+            // lights
+
+            light = new THREE.DirectionalLight( 0xffffff );
+            light.position.set( 1, 1, 1 );
+            scene.add( light );
+
+            light = new THREE.DirectionalLight( 0x002288 );
+            light.position.set( -1, -1, -1 );
+            scene.add( light );
+
+            light = new THREE.AmbientLight( 0x222222 );
+            scene.add( light );
+
+
+            // renderer
+
+            renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            container = document.getElementById('container');
+            container.appendChild(renderer.domElement);
+
+            window.addEventListener('resize', onWindowResize, false);
+
+            animate();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize( window.innerWidth, window.innerHeight );
+
+            render();
+        }
+
+        function render() {
+            renderer.render( scene, camera );
+        }
+    </script>
+</html>
