@@ -47,8 +47,8 @@
     function fitToView(viewer, modelBuilder) {
         // Exclude any undefined meshes in vizmeshes array
         // (first element is always undefined when not document is not loaded)
-        let meshesToShow = modelBuilder.fragList.vizmeshes.filter(m => m).map(m => m.dbId);
-        viewer.impl.fitToView(meshesToShow, modelBuilder.model);
+        let dbIds = modelBuilder.fragList.vizmeshes.filter(m => m).map(m => m.dbId);
+        viewer.fitToView(dbIds, modelBuilder.model);
     }
 
     function setViewFromBoundingBox(viewer, modelBuilder, meshes) {
