@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Fit to View</title>
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=no"/>
+    <meta charset="UTF-8">
+
+    <!-- Autodesk Forge Viewer files -->
+    <link rel="stylesheet"
+          href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css"
+          type="text/css">
+
+    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"></script>
+</head>
+
+<body>
+    <div id="MyViewerDiv"></div>
+</body>
+<script>
+    let divId = "MyViewerDiv";
+    let viewer;
+
+    async function setupViewer() {
+        await new Promise(function (resolve, reject) {
+            Autodesk.Viewing.Initializer({}, function () {
+                resolve();
+            });
+        });
+
+        viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById(divId), {});
+        viewer.start();
+        await viewer.loadExtension('Autodesk.Viewing.SceneBuilder');
+        ext = viewer.getExtension('Autodesk.Viewing.SceneBuilder');
+        modelBuilder = await ext.addNewModel({});
+
+        let meshes = createMeshes();
+
+        meshes.forEach(mesh => {
+            modelBuilder.addMesh(mesh);
+        });
+
+        setViewFromBoundingBox(viewer, modelBuilder, meshes);
+        // fitToView(viewer, modelBuilder);
+    }
+
+    function fitToView(viewer, modelBuilder) {
+        // Exclude any undefined meshes in vizmeshes array
+        // (first element is always undefined when not document is not loaded)
+        let meshesToShow = modelBuilder.fragList.vizmeshes.filter(m => m).map(m => m.dbId);
+        viewer.impl.fitToView(meshesToShow, modelBuilder.model);
+    }
+
+    function setViewFromBoundingBox(viewer, modelBuilder, meshes) {
+        const allMeshes = new THREE.Object3D();
+        meshes.forEach(mesh => allMeshes.add(mesh));
+
+        const boundingBox = new THREE.Box3().setFromObject(allMeshes);
+        const boundingSphere = new THREE.Sphere();
+        boundingBox.getBoundingSphere(boundingSphere);
+
+        const distance = boundingSphere.radius;
+        const direction = new THREE.Vector3(0, 1, 1);
+        const scaled = direction.multiplyScalar(distance);
+        const position = boundingSphere.center.clone().add(scaled);
+
+        const camera = viewer.getCameraFromViewArray([
+            position.x, position.y, position.z,
+            0, 0, 0,
+            0, 1, 0,
+            1,
+            50 * Math.PI / 180,
+            60,
+            1
+        ]);
+
+        viewer.impl.setViewFromCamera(camera, true, true);
+    }
+
+    function createMeshes() {
+        let meshes = [];
+
+        meshes.push(createMesh(new THREE.Vector3(-10, 0, 0)));
+        meshes.push(createMesh(new THREE.Vector3(10, 0, 0)));
+        meshes.push(createMesh(new THREE.Vector3(0, 10, 0)));
+        meshes.push(createMesh(new THREE.Vector3(0, -10, 0)));
+        meshes.push(createMesh(new THREE.Vector3(0, 0, -10)));
+        meshes.push(createMesh(new THREE.Vector3(0, 0, 10)));
+
+        return meshes;
+    }
+
+    function createMesh(position) {
+        purple = new THREE.MeshPhongMaterial({
+            color: new THREE.Color(1, 0, 1)
+        });
+
+        box = new THREE.BufferGeometry().fromGeometry(new THREE.BoxGeometry(2, 2, 2));
+        mesh = new THREE.Mesh(box, purple);
+        // mesh.dbId = 12345;
+        mesh.matrix = new THREE.Matrix4().compose(
+             position,
+             new THREE.Quaternion(0, 0, 0, 1),
+             new THREE.Vector3(1, 1, 1)
+        );
+
+        return mesh;
+    }
+
+    setupViewer();
+
+</script>
+
+</html>
